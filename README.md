@@ -1,5 +1,16 @@
 # PythonBackdoor
 
+## Setup
+
+```bash
+cd src
+python3 setup.py develop
+```
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Resources
 
 * https://captmeelo.com/exploitdev/osceprep/2018/07/16/backdoor101-part1.html
