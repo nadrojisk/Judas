@@ -5,10 +5,13 @@ try:
 except ImportError:
     pass
 import netifaces
+from config import VERBOSE
+
 
 def get_ip():
     interface = utilities.choose_interface()
     return netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
+
 
 def choose_interface():
     """
@@ -54,6 +57,8 @@ def port_to_hex(string):
 
 
 def make_duplicate(source, tag=None):
+    if VERBOSE:
+        print(f"Making duplicate file for {source}")
     if tag:
         tag = "_" + tag
     else:
@@ -65,4 +70,6 @@ def make_duplicate(source, tag=None):
     if os.path.exists(dest):
         os.remove(dest)
     shutil.copyfile(source, dest)
+    if VERBOSE:
+        print(f"New file has been made: {dest}\n")
     return dest
