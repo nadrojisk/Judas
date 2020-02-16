@@ -12,6 +12,5 @@ section_injection.add_section(file_info)
 
 p = 'rev'
 path = utilities.make_duplicate("./assets/bin/putty_injection.exe", p)
-info = [path,
-        p]
-payload_injection.insert_payload(info)
+
+payload_injection.insert_payload(path, p)
