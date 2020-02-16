@@ -1,22 +1,13 @@
-import os
 import mmap
-import shutil
 import math
 import pefile
+import utilities
+import os
 
 
-def make_duplicate(source):
-    dest = source + "_"
-    if os.path.exists(dest):
-        os.remove(dest)
-    shutil.copyfile(source, dest)
-    return dest
-
-
-def add_section(info):
+def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     # TODO Ensure there is enough space to add more sections
-
-    exe_path, name, virtual_size, raw_size, characteristics = info
+    exe_path = utilities.make_duplicate(exe_path, 'injection')
 
     pe = pefile.PE(exe_path)
 
@@ -99,7 +90,7 @@ def locate_offsets(pe):
 
 if __name__ == "__main__":
 
-    path = make_duplicate("./assets/bin/putty.exe")
+    path = utilities.make_duplicate("./assets/bin/putty.exe", 'injection')
     file_info = [path,
                  ".pwn",
                  0x1000,
