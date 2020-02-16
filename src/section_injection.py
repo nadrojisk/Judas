@@ -21,6 +21,11 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     if VERBOSE:
         print(f"Loading {exe_path} into PE File Module\n")
     pe = pefile.PE(exe_path)
+    if no_space(pe):
+        exit(1)
+
+    last_section_offset = pe.sections[pe.FILE_HEADER.NumberOfSections -
+                                      1].get_file_offset()
 
     FILE_ALIGNMENT = pe.OPTIONAL_HEADER.FileAlignment
 
@@ -41,7 +46,7 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     # Section name must be equal to 8 bytes
     if len(name) > 8:
         print("Error: Section name must be less than or equal to 8 bytes")
-        return
+        exit(1)
 
     name += '\x00' * (8 - len(name))
 
@@ -67,9 +72,11 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     pe.OPTIONAL_HEADER.SizeOfImage = virtual_size + virtual_offset
 
     # write changes
-
     pe.write(exe_path)
+
+    # resize file
     resize(exe_path)
+
     print("[x] Section Added\n")
 
 
@@ -110,12 +117,22 @@ def locate_offsets(pe):
     return raw_offset, virtual_offset, new_section_offset
 
 
+def no_space(pe):
+    number_of_section = pe.FILE_HEADER.NumberOfSections
+    last_section_offset = pe.sections[number_of_section - 1].get_file_offset()
+    for x in pe.get_data(last_section_offset+0x40, 0x40):
+        if x != 0x0:
+            print('Error: Not enough space in file!')
+            return 1
+    return 0
+
+
 if __name__ == "__main__":
 
-    path = utilities.make_duplicate("./assets/bin/putty.exe", 'injection')
-    file_info = [path,
-                 ".pwn",
-                 0x1000,
-                 0x1000,
-                 0xE0000000]
-    add_section(file_info)
+    path = utilities.make_duplicate("./assets/bin/notepad.exe", 'injection')
+
+    add_section(path,
+                ".pwn",
+                0x1000,
+                0x1000,
+                0xE0000000)
