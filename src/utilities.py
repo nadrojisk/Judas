@@ -6,6 +6,9 @@ except ImportError:
     pass
 import netifaces
 
+def get_ip():
+    interface = utilities.choose_interface()
+    return netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
 
 def choose_interface():
     """
