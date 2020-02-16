@@ -1,5 +1,43 @@
 import os
 import shutil
+try:
+    import winreg as wr
+except ImportError:
+    pass
+import netifaces
+
+
+def choose_interface():
+    """
+    Allows user to select interface based
+    on system interfaces
+    """
+    interfaces = netifaces.interfaces()
+
+    if os.name == 'nt':
+        # allows windows machines to choose interfaces
+        iface_names = ['(unknown)' for i in range(len(interfaces))]
+        reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
+        reg_key = wr.OpenKey(
+            reg, r'SYSTEM\CurrentControlSet\Control\Network\{4d36e972-e325-11ce-bfc1-08002be10318}')
+        for counter, interface in enumerate(interfaces):
+            try:
+                reg_subkey = wr.OpenKey(
+                    reg_key, interface + r'\Connection')
+
+                iface_names[counter] = wr.QueryValueEx(reg_subkey, 'Name')[0]
+            except FileNotFoundError:
+                pass
+        interfaces = iface_names
+
+    print('Select Interface: ')
+
+    for val, count in enumerate(interfaces):
+        print(val, count)
+
+    selection = int(input())
+
+    return interfaces[selection]
 
 
 def ip_to_hex(ip):
