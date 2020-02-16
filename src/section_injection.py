@@ -5,10 +5,9 @@ import utilities
 import os
 
 
-def add_section(info):
+def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     # TODO Ensure there is enough space to add more sections
-
-    exe_path, name, virtual_size, raw_size, characteristics = info
+    exe_path = utilities.make_duplicate(exe_path, 'injection')
 
     pe = pefile.PE(exe_path)
 

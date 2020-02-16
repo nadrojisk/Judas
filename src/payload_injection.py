@@ -80,6 +80,7 @@ def payload_selection(payload, *args, **kwargs):
 
 
 def insert_payload(path, payload, *args, **kwargs):
+    path = utilities.make_duplicate(path, payload)
     pe = pefile.PE(path)
 
     # We will first change the binaries entry point to be the newly injected section
