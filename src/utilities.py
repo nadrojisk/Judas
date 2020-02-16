@@ -2,6 +2,12 @@ import os
 import shutil
 
 
+def ip_to_hex(ip):
+    new_ip = "".join([hex(int(x))[2:].zfill(2) for x in ip.split(".")])
+
+    return bytes.fromhex(new_ip)
+
+
 def make_duplicate(source, tag=None):
     if tag:
         tag = "_" + tag
