@@ -2,6 +2,7 @@ import mmap
 import math
 import pefile
 import utilities
+import os
 
 
 def add_section(info):
@@ -90,7 +91,7 @@ def locate_offsets(pe):
 
 if __name__ == "__main__":
 
-    path = utilities.make_duplicate("./assets/bin/putty.exe")
+    path = utilities.make_duplicate("./assets/bin/putty.exe", 'injection')
     file_info = [path,
                  ".pwn",
                  0x1000,
