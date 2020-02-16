@@ -9,7 +9,7 @@ from config import VERBOSE
 
 
 def get_ip():
-    interface = utilities.choose_interface()
+    interface = choose_interface()
     return netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
 
 
@@ -25,7 +25,8 @@ def choose_interface():
         iface_names = ['(unknown)' for i in range(len(interfaces))]
         reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
         reg_key = wr.OpenKey(
-            reg, r'SYSTEM\CurrentControlSet\Control\Network\{4d36e972-e325-11ce-bfc1-08002be10318}')
+            reg, r'SYSTEM\CurrentControlSet\Control\Network\
+            {4d36e972-e325-11ce-bfc1-08002be10318}')
         for counter, interface in enumerate(interfaces):
             try:
                 reg_subkey = wr.OpenKey(
