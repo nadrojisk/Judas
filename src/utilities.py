@@ -8,6 +8,10 @@ def ip_to_hex(ip):
     return bytes.fromhex(new_ip)
 
 
+def port_to_hex(string):
+    return int(string).to_bytes(2, 'big')
+
+
 def make_duplicate(source, tag=None):
     if tag:
         tag = "_" + tag
