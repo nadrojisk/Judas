@@ -3,26 +3,50 @@ import math
 import pefile
 import utilities
 import os
+from config import VERBOSE
 
 
 def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     # TODO Ensure there is enough space to add more sections
+
+    if VERBOSE:
+        print(f"New Section Information:\n\
+            \tName: {name}\n\
+            \tVirtual Size: {virtual_size}\n\
+            \tRaw Size: {raw_size}\n\
+            \tCharactersitics: {hex(characteristics)}\n")
+
     exe_path = utilities.make_duplicate(exe_path, 'injection')
 
+    if VERBOSE:
+        print(f"Loading {exe_path} into PE File Module\n")
     pe = pefile.PE(exe_path)
+    if no_space(pe):
+        exit(1)
+
+    last_section_offset = pe.sections[pe.FILE_HEADER.NumberOfSections -
+                                      1].get_file_offset()
 
     FILE_ALIGNMENT = pe.OPTIONAL_HEADER.FileAlignment
 
+    # print(f"File alignment is {FILE_ALIGNMENT}")
+
     raw_offset, virtual_offset, new_section_offset = locate_offsets(pe)
+    if VERBOSE:
+        print(f"Section Offsets:\n\
+            \tRaw offset: {hex(raw_offset)}\n\
+            \tVirtual offset: {hex(virtual_offset)}\n\
+            \tSection table offset: {hex(new_section_offset)}\n")
 
     # ensure raw size is multiple of filealignment
     if raw_size % FILE_ALIGNMENT != 0:
+        # print(f"Raw size is not a multiple of the file alignment: {hex(FILE_ALIGNMENT)}\n")
         raw_size = math.ceil(raw_size / FILE_ALIGNMENT) * FILE_ALIGNMENT
 
     # Section name must be equal to 8 bytes
     if len(name) > 8:
         print("Error: Section name must be less than or equal to 8 bytes")
-        return
+        exit(1)
 
     name += '\x00' * (8 - len(name))
 
@@ -50,14 +74,17 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     # write changes
     pe.write(exe_path)
 
+    # resize file
     resize(exe_path)
+
+    print("[x] Section Added\n")
 
 
 def resize(path):
     fd = open(path, 'a+b')
     original_size = os.path.getsize(path)
     map = mmap.mmap(fd.fileno(), 0, access=mmap.ACCESS_WRITE)
-    map.resize(original_size + 0x2000)
+    map.resize(original_size + 0x2000)  # TODO 0x2000 may not always be needed!
     map.close()
     fd.close()
 
@@ -68,7 +95,8 @@ def locate_offsets(pe):
     number_of_section = pe.FILE_HEADER.NumberOfSections
     last_section = number_of_section - 1
 
-    # get offset for new section by looking at the last sections last byte
+    # get offset for new section by looking at the last sections location
+
     raw_offset = pe.sections[last_section].PointerToRawData + \
         pe.sections[last_section].SizeOfRawData
 
@@ -77,6 +105,7 @@ def locate_offsets(pe):
 
     # ensure virtual offset is a multiple of sectionalignment
     if virtual_offset % SECTION_ALIGNMENT != 0:
+        # print(f"Virtual offset is not a multiple of the section alignment: {hex(SECTION_ALIGNMENT)}\n")
         factor = math.ceil(virtual_offset / SECTION_ALIGNMENT)
         virtual_offset = factor * SECTION_ALIGNMENT
 
@@ -88,12 +117,22 @@ def locate_offsets(pe):
     return raw_offset, virtual_offset, new_section_offset
 
 
+def no_space(pe):
+    number_of_section = pe.FILE_HEADER.NumberOfSections
+    last_section_offset = pe.sections[number_of_section - 1].get_file_offset()
+    for x in pe.get_data(last_section_offset+0x40, 0x40):
+        if x != 0x0:
+            print('Error: Not enough space in file!')
+            return 1
+    return 0
+
+
 if __name__ == "__main__":
 
-    path = utilities.make_duplicate("./assets/bin/putty.exe", 'injection')
-    file_info = [path,
-                 ".pwn",
-                 0x1000,
-                 0x1000,
-                 0xE0000000]
-    add_section(file_info)
+    path = utilities.make_duplicate("./assets/bin/notepad.exe", 'injection')
+
+    add_section(path,
+                ".pwn",
+                0x1000,
+                0x1000,
+                0xE0000000)
