@@ -129,9 +129,7 @@ def no_space(pe):
 
 if __name__ == "__main__":
 
-    path = utilities.make_duplicate("./assets/bin/notepad.exe", 'injection')
-
-    add_section(path,
+    add_section("./assets/bin/putty.exe",
                 ".pwn",
                 0x1000,
                 0x1000,
