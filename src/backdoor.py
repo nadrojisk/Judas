@@ -1,4 +1,4 @@
-from _init_ import *
+from _init_ import section_injection, payload_injection
 
 print("Running PE Backdoor Module...\n")
 
