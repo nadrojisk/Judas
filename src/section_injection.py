@@ -19,8 +19,13 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     if VERBOSE:
         print(f"Loading {exe_path} into PE File Module\n")
     pe = pefile.PE(exe_path)
+    if not pe.FILE_HEADER.IMAGE_FILE_32BIT_MACHINE:
+        print("Error: File is not a 32-bit binary.")
+        utilities.delete_file(
+            exe_path, )
+        exit(1)
     if no_space(pe):
-        utilities.delete_file(exe_path, "Removing intermediate file")
+        utilities.delete_file(exe_path)
         exit(1)
 
     last_section_offset = pe.sections[pe.FILE_HEADER.NumberOfSections -
@@ -45,7 +50,7 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     # Section name must be equal to 8 bytes
     if len(name) > 8:
         print("Error: Section name must be less than or equal to 8 bytes")
-        utilities.delete_file(exe_path, "Removing intermediate file")
+        utilities.delete_file(exe_path)
         exit(1)
 
     name += '\x00' * (8 - len(name))
@@ -131,7 +136,7 @@ def no_space(pe):
 
 if __name__ == "__main__":
 
-    add_section("./assets/bin/putty.exe",
+    add_section("./assets/bin/sublime_text.exe",
                 ".pwn",
                 0x1000,
                 0x1000,
