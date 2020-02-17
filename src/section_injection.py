@@ -79,6 +79,8 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
 
     print("[x] Section Added\n")
 
+    return exe_path
+
 
 def resize(path):
     fd = open(path, 'a+b')
