@@ -7,8 +7,6 @@ from config import VERBOSE
 
 
 def add_section(exe_path, name, virtual_size, raw_size, characteristics):
-    # TODO Ensure there is enough space to add more sections
-
     if VERBOSE:
         print(f"New Section Information:\n\
             \tName: {name}\n\
