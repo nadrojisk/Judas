@@ -7,8 +7,6 @@ from config import VERBOSE
 
 
 def add_section(exe_path, name, virtual_size, raw_size, characteristics):
-    # TODO Ensure there is enough space to add more sections
-
     if VERBOSE:
         print(f"New Section Information:\n\
             \tName: {name}\n\
@@ -21,7 +19,13 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     if VERBOSE:
         print(f"Loading {exe_path} into PE File Module\n")
     pe = pefile.PE(exe_path)
+    if not pe.FILE_HEADER.IMAGE_FILE_32BIT_MACHINE:
+        print("Error: File is not a 32-bit binary.")
+        utilities.delete_file(
+            exe_path, )
+        exit(1)
     if no_space(pe):
+        utilities.delete_file(exe_path)
         exit(1)
 
     last_section_offset = pe.sections[pe.FILE_HEADER.NumberOfSections -
@@ -46,6 +50,7 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     # Section name must be equal to 8 bytes
     if len(name) > 8:
         print("Error: Section name must be less than or equal to 8 bytes")
+        utilities.delete_file(exe_path)
         exit(1)
 
     name += '\x00' * (8 - len(name))
@@ -78,6 +83,8 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     resize(exe_path)
 
     print("[x] Section Added\n")
+
+    return exe_path
 
 
 def resize(path):
@@ -129,9 +136,7 @@ def no_space(pe):
 
 if __name__ == "__main__":
 
-    path = utilities.make_duplicate("./assets/bin/notepad.exe", 'injection')
-
-    add_section(path,
+    add_section("./assets/bin/sublime_text.exe",
                 ".pwn",
                 0x1000,
                 0x1000,

