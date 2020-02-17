@@ -20,6 +20,7 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
         print(f"Loading {exe_path} into PE File Module\n")
     pe = pefile.PE(exe_path)
     if no_space(pe):
+        utilities.delete_file(exe_path, "Removing intermediate file")
         exit(1)
 
     last_section_offset = pe.sections[pe.FILE_HEADER.NumberOfSections -
@@ -44,6 +45,7 @@ def add_section(exe_path, name, virtual_size, raw_size, characteristics):
     # Section name must be equal to 8 bytes
     if len(name) > 8:
         print("Error: Section name must be less than or equal to 8 bytes")
+        utilities.delete_file(exe_path, "Removing intermediate file")
         exit(1)
 
     name += '\x00' * (8 - len(name))

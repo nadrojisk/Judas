@@ -4,6 +4,9 @@ import utilities
 import struct
 import os
 
+# TODO currently only works for 32 bit, 64 bit has a different packing
+# scheme and opcodes
+
 
 def call_oep(base, oep):
     jumpback = base + oep
@@ -127,10 +130,7 @@ def insert_payload(original_path, payload, *args, **kwargs):
     pe.write(path)
     print("[x] Payload injected\n")
 
-    if os.path.exists(original_path):
-        if VERBOSE:
-            print("Removing intermediate file")
-        os.remove(original_path)
+    utilities.delete_file(original_path, "Removing intermediate file")
 
 
 if __name__ == "__main__":

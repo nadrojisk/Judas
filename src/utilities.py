@@ -74,3 +74,10 @@ def make_duplicate(source, tag=None):
     if VERBOSE:
         print(f"New file has been made: {dest}\n")
     return dest
+
+
+def delete_file(path, msg):
+    if os.path.exists(path):
+        if VERBOSE:
+            print(msg)
+        os.remove(original_path)
