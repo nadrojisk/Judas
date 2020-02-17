@@ -130,7 +130,7 @@ def insert_payload(original_path, payload, *args, **kwargs):
     pe.write(path)
     print("[x] Payload injected\n")
 
-    utilities.delete_file(original_path, "Removing intermediate file")
+    utilities.delete_file(original_path)
 
 
 if __name__ == "__main__":

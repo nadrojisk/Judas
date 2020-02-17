@@ -76,8 +76,8 @@ def make_duplicate(source, tag=None):
     return dest
 
 
-def delete_file(path, msg):
+def delete_file(path):
     if os.path.exists(path):
         if VERBOSE:
-            print(msg)
-        os.remove(original_path)
+            print("Removing intermediate file")
+        os.remove(path)
