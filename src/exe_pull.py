@@ -36,6 +36,9 @@ def find_exe_download_request():
     server_ip = ""
     while (client_ip == "" and server_ip == ""):
         p=sc.sniff(count=1)
+        print(p[0].summary())
+        if 'Raw' in p[0].summary():
+            print(p[0].load)
         if 'Raw' in p[0].summary() and b'exe' in p[0].load and b'HTTP' in p[0].load:
             client_ip = p[0][sc.IP].src
             server_ip = p[0][sc.IP].dst
