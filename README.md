@@ -11,6 +11,10 @@ python3 setup.py develop
 pip install -r requirements.txt
 ```
 
+```bash
+sudo apt-get install git cmake gcc g++ pkg-config libglib2.0-dev libssl-dev
+```
+
 ## Windows
 
 If running this script on Windows ensure you exclude this folder from Windows Defender scans.
