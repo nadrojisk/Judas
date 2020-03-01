@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 import argparse
-from _init_ import section_injection, payload_injection
+from _init_ import section_injection, payload_injection, wizard
 
 banner = """
        __          __          
@@ -70,7 +70,15 @@ parser.add_argument('-sN',
                     help='name for section to be injected',
                     default=".pwn")
 
+parser.add_argument('-w',
+                    '--wizard',
+                    action='store_true',
+                    help='run tool in wizard mode',
+                    default=False)
 args = parser.parse_args()
+
+if args.wizard:
+    args = wizard.run(args)
 
 print("Adding new section...")
 
