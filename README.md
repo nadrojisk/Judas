@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ```
 
 ```bash
-sudo apt install libssl-dev
+sudo apt-get install git cmake gcc g++ pkg-config libglib2.0-dev libssl-dev
 ```
 
 ## Windows
