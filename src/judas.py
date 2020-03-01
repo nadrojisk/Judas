@@ -1,7 +1,6 @@
 import binascii
 from keystone import *
 import struct
-from config import VERBOSE
 import mmap
 import math
 import pefile

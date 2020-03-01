@@ -76,12 +76,12 @@ parser.add_argument('-w',
                     help='run tool in wizard mode',
                     default=False)
 
-
 parser.add_argument('-v',
                     '--verbose',
                     action='store_true',
                     help='print verbose output',
                     default=False)
+
 args = parser.parse_args()
 if args.wizard:
     args = run(args)
