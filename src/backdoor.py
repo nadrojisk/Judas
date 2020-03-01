@@ -3,6 +3,14 @@
 import argparse
 from _init_ import section_injection, payload_injection
 
+banner = """
+       __          __          
+      / /_  ______/ /___ ______
+ __  / / / / / __  / __ `/ ___/
+/ /_/ / /_/ / /_/ / /_/ (__  ) 
+\____/\__,_/\__,_/\__,_/____/                                
+"""
+print(banner)
 
 # Create the parser
 parser = argparse.ArgumentParser(
