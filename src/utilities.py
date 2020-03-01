@@ -25,21 +25,20 @@ def choose_interface():
         iface_names = ['(unknown)' for i in range(len(interfaces))]
         reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
         reg_key = wr.OpenKey(
-            reg, r'SYSTEM\CurrentControlSet\Control\Network\
-            {4d36e972-e325-11ce-bfc1-08002be10318}')
+            reg, "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}")
         for counter, interface in enumerate(interfaces):
             try:
                 reg_subkey = wr.OpenKey(
                     reg_key, interface + r'\Connection')
 
-                iface_names[counter] = wr.QueryValueEx(reg_subkey, 'Name')[0]
+                iface_names[counter] = wr.QueryValueEx(
+                    reg_subkey, 'Name')[0]
             except FileNotFoundError:
                 pass
-        interfaces = iface_names
 
     print('Select Interface: ')
 
-    for val, count in enumerate(interfaces):
+    for val, count in enumerate(iface_names):
         print(val, count)
 
     selection = int(input())
