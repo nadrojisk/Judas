@@ -363,6 +363,8 @@ class Judas:
                         reg_subkey, 'Name')[0]
                 except FileNotFoundError:
                     pass
+        else:
+            iface_names = interfaces
 
         print('Select Interface: ')
 
