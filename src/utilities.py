@@ -5,7 +5,8 @@ try:
 except ImportError:
     pass
 import netifaces
-from config import VERBOSE
+
+VERBOSE = False
 
 
 def get_ip():

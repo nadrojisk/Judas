@@ -3,10 +3,13 @@ import math
 import pefile
 import utilities
 import os
-from config import VERBOSE
+
+VERBOSE = False
 
 
-def add_section(exe_path, name, virtual_size, raw_size, characteristics):
+def add_section(exe_path, name, virtual_size, raw_size, characteristics, verbose=False):
+    global VERBOSE
+    VERBOSE = verbose
     if VERBOSE:
         print(f"New Section Information:\n\
             \tName: {name}\n\
