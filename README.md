@@ -2,18 +2,39 @@
 
 ## Setup
 
+First ensure your box is completely up to date.
+The instructions that follow assume you are using a Debian based Linux distribution.
+The only system that is known not to work with this framework is macOS as for some reason it does not ship with memory map.
+
 ```bash
-cd src
-python3 setup.py develop
+sudo apt update && sudo apt upgrade -y
+```
+
+After updating and upgrading the system install the dependencies needed by Judas.
+
+```bash
+pushd
+NB_CPU="$(grep -c processor /proc/cpuinfo)"
+sudo apt-get install python3-pip git cmake gcc g++ pkg-config libglib2.0-dev libssl-dev -y
+cd /tmp
+git clone https://github.com/keystone-engine/keystone.git
+cd keystone
+mkdir build
+cd build
+sed -i "s/make -j8/make -j${NB_CPU}/g" ../make-share.sh
+../make-share.sh
+sudo make install
+sudo ldconfig
+cd ../bindings/python
+sudo make install3 # or sudo make install for python2-bindings
+popd
 ```
 
 ```bash
 pip install -r requirements.txt
 ```
 
-```bash
-sudo apt-get install git cmake gcc g++ pkg-config libglib2.0-dev libssl-dev
-```
+
 
 ## Windows
 
