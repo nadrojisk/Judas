@@ -30,6 +30,13 @@ class Judas:
         self.original_entry_point = 0
         self.new_entry_point = 0
 
+        try:
+            open(path)
+        except IOError:
+            print(f"Error: '{path}' not found, or could not be opened...")
+            print("Quiting execution")
+            exit()
+
     def add_section(self):
 
         if self.verbose:
