@@ -35,7 +35,7 @@ class Judas:
         except IOError:
             print(f"Error: '{path}' not found, or could not be opened...")
             print("Quiting execution")
-            exit()
+            exit(1)
 
     def add_section(self):
 
