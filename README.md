@@ -11,6 +11,10 @@ python3 setup.py develop
 pip install -r requirements.txt
 ```
 
+```bash
+sudo apt install libssl-dev
+```
+
 ## Windows
 
 If running this script on Windows ensure you exclude this folder from Windows Defender scans.
