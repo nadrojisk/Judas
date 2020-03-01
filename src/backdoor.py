@@ -12,31 +12,31 @@ parser = argparse.ArgumentParser(
 parser.add_argument('path',
                     metavar='path',
                     type=str,
-                    help='the path to list')
+                    help='path to the binary that you wish to inject')
 
 parser.add_argument('-lP',
                     '--lport',
                     type=int,
-                    metavar='lport',
+                    metavar='port',
                     help='listening port for payload')
 
 parser.add_argument('-lH',
                     '--lhost',
                     type=str,
-                    metavar='lhost',
+                    metavar='ip',
                     help='listening host for payload')
 
 parser.add_argument('-sS',
                     '--section_size',
                     type=int,
-                    metavar='section_size',
+                    metavar='size',
                     help='size for section to be injected',
                     default=0x1000)
 
 parser.add_argument('-sP',
                     '--page_size',
                     type=int,
-                    metavar='section_size',
+                    metavar='size',
                     help='size for section to be injected',
                     default=0x1000)
 
@@ -51,14 +51,14 @@ parser.add_argument('-t',
 parser.add_argument('-pS',
                     '--section_permissions',
                     type=int,
-                    metavar='section_permissions',
+                    metavar='permissions',
                     help='permissions for section to be injected',
                     default=0xE0000000)
 
 parser.add_argument('-nS',
                     '--section_name',
                     type=str,
-                    metavar='section_name',
+                    metavar='name',
                     help='name for section to be injected',
                     default=".pwn")
 
