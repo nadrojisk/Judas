@@ -92,18 +92,18 @@ Defaults to 0xE0000000 (READ | EXECUTE).
 Name of the section being injected into the binary.
 Defaults to .pwn.
 
-## Payload Type (-t | --type)
+### Payload Type (-t | --type)
 
 Type of the payload being injected.
 Current options:
     msg : message box shell script
     rev : reverse shell script
 
-## Wizard Mode (-w | --wizard)
+### Wizard Mode (-w | --wizard)
 
 Activates wizard which prompts users for inputs depending on type of payload chosen.
 
-## Verbose Mode (-v | --verbose)
+### Verbose Mode (-v | --verbose)
 
 Activates verbose mode
 
