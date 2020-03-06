@@ -1,5 +1,15 @@
 # Judas
 
+## Background
+
+This is an attack project for COMP 6970: Computer Security at the Fringes.
+It's purpose and intent is purely for educational purposes.
+
+The goal was to build a framework that could inject malicious code into PE files on the fly. 
+An additional step was to hook an open source router firmware so that when an executable is being downloaded to a client's computer the router would automatically inject the malicious code and hand off the new file to the client. 
+
+Unfortunately, we were unable to have the router firmware modification working by the due date.
+
 ## Setup
 
 First ensure your box is completely up to date.
